@@ -7,7 +7,8 @@ spl_autoload_register(function ($class) {
   include 'class/' . $class . '.class.php';
 });
 
-$db = new Database('cir2', 'cir2', 'cir2', 'localhost');
+$db = new Database();
+$currentPage = isset($_GET['page']) ? $_GET['page'] : 1;
 
 ?>
 <!DOCTYPE html>
@@ -92,11 +93,11 @@ $db = new Database('cir2', 'cir2', 'cir2', 'localhost');
           <table class="table table-striped">
             <thead class="bg-primary text-white">
               <tr>
-                <th scope="col" class="id">N°</th>
                 <th scope="col" class="Date">Date</th>
                 <th scope="col" class="label">Espece</th>
                 <th scope="col" class="label">Zone</th>
                 <th scope="col" class="label">Nombre</th>
+                <th scope="col" class="edit">Modifier</th>
               </tr>
             </thead>
             <tbody style="border: 1px solid black;">
@@ -105,11 +106,11 @@ $db = new Database('cir2', 'cir2', 'cir2', 'localhost');
               $echouages = $db->getEchouages($_POST);
               foreach ($echouages as $echouage) : ?>
                 <tr style="border: 1px solid black;">
-                  <td class="id"><?php echo $echouage->getId(); ?></td>
                   <td class="id"><?php echo $echouage->getDate(); ?></td>
-                  <td class="label"><?php echo $echouage->getEspece(); ?></td>
+                  <td class="label"><a href="echouage.php?id=<?php echo $echouage->getId(); ?>"><?php echo $echouage->getEspece(); ?></a></td>
                   <td class="label"><?php echo $echouage->getZone(); ?></td>
                   <td class="label"><?php echo $echouage->getNombre(); ?></td>
+                  <td class="edit"><a href="echouage-form.php?id=<?php echo $echouage->getId(); ?>">Modifier</a></td>
                 </tr>
               <?php endforeach; ?>
 
@@ -117,15 +118,40 @@ $db = new Database('cir2', 'cir2', 'cir2', 'localhost');
           </table>
 
             <nav aria-label="Page navigation example">
-            <ul class="pagination">
-              <li class="page-item"><a class="page-link" href="#"><<</a></li>
+            <ul class="pagination justify-content-center">
 
-              <?php $nbPages = $db->getTotalPages(); ?>
-              <?php for ($i=0; $i < $nbPages; $i++) : ?>
-              <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $i; ?>#echouages"><?php echo $i+1; ?></a></li>
+              <?php if($currentPage == 1) : ?>
+                <li class="page-item"><a class="page-link text-secondary" href="#echouages"><<</a></li>
+                <li class="page-item"><a class="page-link text-secondary" href="#echouages"><</a></li>
+              <?php else : ?>
+                <li class="page-item"><a class="page-link" href="index.php#echouages"><<</a></li>
+                <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $currentPage - 1; ?>#echouages"><</a></li>
+              <?php endif; ?>
+
+              <?php
+                $nbPages = $db->getTotalPages();
+                $forI = ($currentPage >= $nbPages - 10) ? $nbPages-10 : $currentPage;
+                $ForMax = ($currentPage >= $nbPages - 10) ? $nbPages+1 : $currentPage+10;
+                for (
+                  $i=$forI;
+                  $i < $ForMax;
+                  $i++
+                ) : ?>
+
+                <?php if($i == 0 && $currentPage == 0) continue; ?>
+                <li class="page-item"><a class="page-link <?php if($currentPage == $i) echo "fw-bold"; ?>" href="index.php?page=<?php echo $i; ?>#echouages"><?php echo $i; ?></a></li>
+
               <?php endfor; ?>
 
-              <li class="page-item"><a class="page-link" href="#">>></a></li>
+
+              <?php if($currentPage == $nbPages) : ?>
+                <li class="page-item"><a class="page-link text-secondary" href="#echouages">></a></li>
+                <li class="page-item"><a class="page-link text-secondary" href="#echouages">>></a></li>
+              <?php else : ?>
+                <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $currentPage + 1; ?>#echouages">></a></li>
+                <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $nbPages; ?>#echouages">>></a></li>
+              <?php endif; ?>
+
             </ul>
             </nav>
 

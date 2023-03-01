@@ -1,3 +1,18 @@
+<?php
+
+ini_set('display_errors', 'on');
+error_reporting(E_ALL);
+
+spl_autoload_register(function ($class) {
+  if(file_exists(__DIR__.'/class/' . $class . '.class.php')) include __DIR__.'/class/' . $class . '.class.php';
+});
+
+include(__DIR__.'/content.php');
+
+$db = new Database();
+$echouage = $db->getOneEchouage($_GET['id']);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -26,7 +41,8 @@
   </nav><!-- Header-->
   <header class="bg-primary bg-gradient text-white">
     <div class="container px-4 text-center">
-      <h1 class="fw-bolder">Nom de l'espèce</h1>
+      <h1 class="fw-bolder"><?php echo $echouage->espece;?></h1>
+      <a href="echouage-form.php" class="mt-2 btn btn-light">Déclarer un échouage</a>
     </div>
   </header>
 
@@ -34,12 +50,37 @@
     <div class="container px-4">
       <div class="row">
         <div class="col-8">
-          <div class="alert alert-danger">
-              <h3>A faire </h3>Afficher les détails (date, zone ...)</div>
+          <div class="alert alert-primary">
+            <h5>Zone : <?php echo $echouage->zone;?></h5>
+            <h5>Année : <?php echo $echouage->date;?></h5>
+          </div>
+          <div class="p-3">
+            <h3><?php echo $echouage->espece;?></h3>
+
+            <?php
+              $words = explode(' ', $echouage->espece);
+              $results = array();
+              foreach ($words as $key => $word) {
+                if(strlen($word) > 3 && $results == null) {
+                  $results = preg_grep('/'.$word.'/i', $contentCommon);
+                }
+              }
+            ?>
+
+            <?php if(!empty($results)) : ?>
+              <?php foreach ($results as $key => $value) : ?>
+                <h4>Description <?php echo $key+1; ?></h4>
+                <p><?php echo $value; ?></p>
+              <?php endforeach; ?>
+            <?php else : ?>
+              <p>Aucune description pour cette espèce</p>
+            <?php endif; ?>
+
+          </div>
         </div>
         <div class="col-4">
-        <div class="alert alert-danger">
-              <h3>A faire </h3>Liste des échouages de la même espèce</div>
+        <div class="alert alert-secondary">
+          <?php echo getImages($echouage->espece); ?>
         </div>
       </div>
     </div>

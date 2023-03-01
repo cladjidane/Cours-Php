@@ -6,9 +6,9 @@ class Database {
     private $db_pass;
     private $db_host;
     private $pdo;
-    private $limit = 250;
+    private $limit = 20;
 
-    public function __construct($db_name = "cir2", $db_user = 'cir2', $db_pass = 'cir2', $db_host = 'localhost') {
+    public function __construct($db_name = "echouages", $db_user = 'cladjidane', $db_pass = 'cladjidane22', $db_host = 'localhost') {
         $this->db_name = $db_name;
         $this->db_user = $db_user;
         $this->db_pass = $db_pass;
@@ -17,7 +17,7 @@ class Database {
 
     private function getPDO() {
         if ($this->pdo === null) {
-            $pdo = new PDO('mysql:dbname=' . $this->db_name . ';host=localhost', $this->db_user, $this->db_user);
+            $pdo = new PDO('mysql:dbname=' . $this->db_name . ';host='.$this->db_host, $this->db_user, $this->db_pass);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->pdo = $pdo;
         }
@@ -29,12 +29,55 @@ class Database {
         return $req->fetchAll(PDO::FETCH_CLASS, $class_name);
     }
 
+
+    public function UpdateEchouage() {
+        $espece = $_POST['espece'];
+        $zone = $_POST['zone'];
+        $nombre = (int) $_POST['nombre'];
+        $date = (int) $_POST['date'];
+        $id =(int)  $_POST['id'];
+        var_dump($nombre);
+
+        $sql = "UPDATE `echouage` SET date= :date, espece= :espece, zone= :zone, nombre= :nombre WHERE id=:id";
+        $sth = $this->getPDO()->prepare($sql);
+        $r = $sth->execute(
+            array(
+                ":espece"=>$espece,
+                ":zone"=>$zone,
+                ":nombre"=>$nombre,
+                ":date"=>$date,
+                ":id"=>$id
+            )
+        );
+        return ($r) ? 1 : 0;
+    }
+
+    public function AddEchouage() {
+        $espece = $_POST['espece'];
+        $zone = $_POST['zone'];
+        $nombre = $_POST['nombre'];
+        $date = $_POST['date'];
+
+        $sql = "INSERT INTO `echouage`(`espece`, `zone`, `nombre`, `date`) VALUES (:espece,:zone,:nombre,:date)";
+        $sth = $this->getPDO()->prepare($sql);
+        $r = $sth->execute(
+            array(
+                ":espece"=>$espece,
+                ":zone"=>$zone,
+                ":nombre"=>$nombre,
+                ":date"=>$date,
+            )
+        );
+        return ($r) ? 1 : 0;
+    }
+
     public function getEchouages($filters = null) {
         $whereArgs = [];
-        $offset = isset($_GET['page']) ? $_GET['page']*$this->limit : 0;
+        $offset = isset($_GET['page']) ? ($_GET['page']-1)*$this->limit : 0;
 
         $sql = 'SELECT *
-        FROM echouage ';
+        FROM echouage
+        ORDER BY date DESC';
 
         if ($filters != null) {
             foreach ($filters as $key => $value) {
@@ -61,6 +104,20 @@ class Database {
         $sth->execute();
 
         return $sth->fetchAll(PDO::FETCH_CLASS, 'Echouage');
+    }
+
+    public function getOneEchouage($id) {
+        $sql = 'SELECT *
+        FROM echouage
+        WHERE id = :where';
+
+        $sth = $this->getPDO()->prepare($sql);
+
+        $sth->bindParam('where', $id);
+
+        $sth->execute();
+
+        return $sth->fetchObject();
     }
 
     public function getEspecesByType() {
